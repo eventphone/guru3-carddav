@@ -1,0 +1,4 @@
+[submodule "lib/nwebdav"]
+	path = lib/nwebdav
+	url = https://github.com/zivillian/nwebdav.git
+	branch = eventphone
