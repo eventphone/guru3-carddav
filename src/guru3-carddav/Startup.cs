@@ -1,5 +1,6 @@
 ﻿using System;
 using eventphone.guru3.carddav.DAL;
+using eventphone.guru3.carddav.DAV;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -7,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using NWebDav.Server;
+using NWebDav.Server.AspNetCore;
+using NWebDav.Server.Stores;
 
 namespace eventphone.guru3.carddav
 {
@@ -25,6 +29,10 @@ namespace eventphone.guru3.carddav
         {
             services.AddDbContext<Guru3Context>(x => x.UseMySql(Configuration.GetConnectionString("DefaultConnection"))
                 .ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.QueryClientEvaluationWarning)));
+
+            services.AddSingleton<IRequestHandlerFactory, RequestHandlerFactory>();
+            services.AddSingleton<IStore, Guru3Store>();
+            services.AddSingleton<IWebDavDispatcher, WebDavDispatcher>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -37,7 +45,13 @@ namespace eventphone.guru3.carddav
 
             app.Run(async (context) =>
             {
-                await context.Response.WriteAsync("Hello World!");
+                // Create the proper HTTP context
+                var httpContext = new AspNetCoreContext(context);
+
+                var webDavDispatcher = context.RequestServices.GetRequiredService<IWebDavDispatcher>();
+
+                // Dispatch request
+                await webDavDispatcher.DispatchRequestAsync(httpContext);
             });
         }
     }

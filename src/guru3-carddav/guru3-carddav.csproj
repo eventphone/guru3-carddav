@@ -15,4 +15,9 @@
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.1.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\lib\nwebdav\NWebDav.Server.AspNetCore\NWebDav.Server.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\lib\nwebdav\NWebDav.Server\NWebDav.Server.csproj" />
+  </ItemGroup>
+
 </Project>
