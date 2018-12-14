@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using NWebDav.Server;
 using NWebDav.Server.Http;
@@ -21,19 +22,19 @@ namespace eventphone.guru3.carddav.DAV
             get { throw new NotImplementedException(); }
         }
 
-        public Task<Stream> GetReadableStreamAsync(IHttpContext httpContext)
+        public Task<Stream> GetReadableStreamAsync(IHttpContext httpContext, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public Task<DavStatusCode> UploadFromStreamAsync(IHttpContext httpContext, Stream source)
+        public Task<DavStatusCode> UploadFromStreamAsync(IHttpContext httpContext, Stream source, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(DavStatusCode.NotImplemented);
         }
 
-        public Task<StoreItemResult> CopyAsync(IStoreCollection destination, string name, bool overwrite, IHttpContext httpContext)
+        public Task<StoreItemResult> CopyAsync(IStoreCollection destination, string name, bool overwrite, IHttpContext httpContext, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(new StoreItemResult(DavStatusCode.NotImplemented));
         }
 
         public IPropertyManager PropertyManager 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using NWebDav.Server;
 using NWebDav.Server.Http;
@@ -22,19 +23,19 @@ namespace eventphone.guru3.carddav.DAV
             get { throw new NotImplementedException(); }
         }
 
-        public Task<Stream> GetReadableStreamAsync(IHttpContext httpContext)
+        public Task<Stream> GetReadableStreamAsync(IHttpContext httpContext, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public Task<DavStatusCode> UploadFromStreamAsync(IHttpContext httpContext, Stream source)
+        public Task<DavStatusCode> UploadFromStreamAsync(IHttpContext httpContext, Stream source, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(DavStatusCode.NotImplemented);
         }
 
-        public Task<StoreItemResult> CopyAsync(IStoreCollection destination, string name, bool overwrite, IHttpContext httpContext)
+        public Task<StoreItemResult> CopyAsync(IStoreCollection destination, string name, bool overwrite, IHttpContext httpContext, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(new StoreItemResult(DavStatusCode.NotImplemented));
         }
 
         public IPropertyManager PropertyManager
@@ -47,45 +48,42 @@ namespace eventphone.guru3.carddav.DAV
             get { throw new NotImplementedException(); }
         }
 
-        public Task<IStoreItem> GetItemAsync(string name, IHttpContext httpContext)
+        public Task<IStoreItem> GetItemAsync(string name, IHttpContext httpContext, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IList<IStoreItem>> GetItemsAsync(IHttpContext httpContext)
+        public Task<IList<IStoreItem>> GetItemsAsync(IHttpContext httpContext, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public Task<StoreItemResult> CreateItemAsync(string name, bool overwrite, IHttpContext httpContext)
+        public Task<StoreItemResult> CreateItemAsync(string name, bool overwrite, IHttpContext httpContext, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(new StoreItemResult(DavStatusCode.NotImplemented));
         }
 
-        public Task<StoreCollectionResult> CreateCollectionAsync(string name, bool overwrite, IHttpContext httpContext)
+        public Task<StoreCollectionResult> CreateCollectionAsync(string name, bool overwrite, IHttpContext httpContext, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(new StoreCollectionResult(DavStatusCode.NotImplemented));
         }
 
         public bool SupportsFastMove(IStoreCollection destination, string destinationName, bool overwrite, IHttpContext httpContext)
         {
-            throw new NotImplementedException();
+            return false;
         }
 
         public Task<StoreItemResult> MoveItemAsync(string sourceName, IStoreCollection destination, string destinationName, bool overwrite,
-            IHttpContext httpContext)
+            IHttpContext httpContext, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(new StoreItemResult(DavStatusCode.NotImplemented));
         }
 
-        public Task<DavStatusCode> DeleteItemAsync(string name, IHttpContext httpContext)
+        public Task<DavStatusCode> DeleteItemAsync(string name, IHttpContext httpContext, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(DavStatusCode.NotImplemented);
         }
 
-        public InfiniteDepthMode InfiniteDepthMode 
-        {
-            get { throw new NotImplementedException(); }
-        }
+        public InfiniteDepthMode InfiniteDepthMode => InfiniteDepthMode.Rejected;
     }
 }

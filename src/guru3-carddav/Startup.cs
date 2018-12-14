@@ -30,9 +30,9 @@ namespace eventphone.guru3.carddav
             services.AddDbContext<Guru3Context>(x => x.UseMySql(Configuration.GetConnectionString("DefaultConnection"))
                 .ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.QueryClientEvaluationWarning)));
 
-            services.AddSingleton<IRequestHandlerFactory, RequestHandlerFactory>();
-            services.AddSingleton<IStore, Guru3Store>();
-            services.AddSingleton<IWebDavDispatcher, WebDavDispatcher>();
+            services.AddSingleton<IRequestHandlerFactory, CarddavRequestHandlerFactory>();
+            services.AddScoped<IStore, Guru3Store>();
+            services.AddScoped<IWebDavDispatcher, WebDavDispatcher>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -51,7 +51,7 @@ namespace eventphone.guru3.carddav
                 var webDavDispatcher = context.RequestServices.GetRequiredService<IWebDavDispatcher>();
 
                 // Dispatch request
-                await webDavDispatcher.DispatchRequestAsync(httpContext);
+                await webDavDispatcher.DispatchRequestAsync(httpContext, context.RequestAborted);
             });
         }
     }
