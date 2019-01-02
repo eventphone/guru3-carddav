@@ -38,5 +38,10 @@ namespace eventphone.guru3.carddav.DAV
             }
             return result;
         }
+
+        protected override Task<string> GetDescriptionAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(String.Empty);
+        }
     }
 }

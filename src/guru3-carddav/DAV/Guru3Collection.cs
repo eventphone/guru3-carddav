@@ -98,7 +98,7 @@ namespace eventphone.guru3.carddav.DAV
                 }
             });
 
-        private Task<string> GetDescriptionAsync(CancellationToken cancellationToken)
+        protected virtual Task<string> GetDescriptionAsync(CancellationToken cancellationToken)
         {
             return _context.Events.Where(x => x.Id == _id).Select(x => x.Name).FirstOrDefaultAsync(cancellationToken);
         }
