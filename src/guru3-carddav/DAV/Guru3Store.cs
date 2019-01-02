@@ -24,26 +24,47 @@ namespace eventphone.guru3.carddav.DAV
             var parts = path.Split(new []{'/'}, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 0)
             {
-                return GetRootAsync(cancellationToken);
+                return Task.FromResult(GetRoot());
             }
             if (parts.Length == 1)
             {
                 return GetEventAsync(parts[0], cancellationToken);
             }
+            if (parts.Length == 2)
+            {
+                return GetExtensionAsync(parts[0], parts[1], cancellationToken);
+            }
             throw new NotImplementedException();
         }
 
-        private async Task<IStoreItem> GetRootAsync(CancellationToken cancellationToken)
+        private IStoreItem GetRoot()
         {
-            throw new NotImplementedException();
+            return new Guru3RootCollection(_context);
         }
 
         private async Task<IStoreItem> GetEventAsync(string eventName, CancellationToken cancellationToken)
         {
-            var dbEvent = _context.Events.Where(x => x.Name == eventName);
-            if (!await dbEvent.AnyAsync(cancellationToken))
+            var dbEvent = await _context.Events.AsNoTracking()
+                .Active()
+                .Where(x => x.Name == eventName)
+                .Select(x=>new {x.Id, x.Name})
+                .FirstOrDefaultAsync(cancellationToken);
+            if (dbEvent == null)
                 return null;
-            throw new NotImplementedException();
+            return new Guru3Collection(dbEvent.Id, dbEvent.Name, _context);
+        }
+
+        private async Task<IStoreItem> GetExtensionAsync(string eventName, string number, CancellationToken cancellationToken)
+        {
+            var dbExtension = await _context.Extensions.AsNoTracking()
+                .Active()
+                .Where(x => x.Event.Name == eventName)
+                .Where(x => x.Number == number)
+                .Select(x => new {x.Id, x.Number})
+                .FirstOrDefaultAsync(cancellationToken);
+            if (dbExtension == null)
+                return null;
+            return new Guru3Item(dbExtension.Id, dbExtension.Number, _context);
         }
 
         public Task<IStoreCollection> GetCollectionAsync(Uri uri, IHttpContext httpContext, CancellationToken cancellationToken)

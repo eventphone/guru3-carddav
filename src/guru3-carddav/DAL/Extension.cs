@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace eventphone.guru3.carddav.DAL
 {
@@ -25,5 +26,11 @@ namespace eventphone.guru3.carddav.DAL
 
         [ForeignKey(nameof(EventId))]
         public Event Event { get; set; }
+
+        [Column("lastChanged")]
+        public DateTimeOffset LastChanged { get; set; }
+
+        [Column("announcement_lang")]
+        public string Language { get; set; }
     }
 }
