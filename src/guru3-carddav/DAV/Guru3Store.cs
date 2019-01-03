@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,16 +22,21 @@ namespace eventphone.guru3.carddav.DAV
         public Task<IStoreItem> GetItemAsync(Uri uri, IHttpContext httpContext, CancellationToken cancellationToken)
         {
             var path = uri.LocalPath;
-            var parts = path.Split(new []{'/'}, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 0)
+            IList<string> parts = path.Split(new []{'/'}, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Count == 0)
             {
                 return Task.FromResult(GetRoot());
             }
-            if (parts.Length == 1)
+            if ("dav".Equals(parts[0], StringComparison.OrdinalIgnoreCase))
+            {
+                //remove proxy prefix
+                parts = new List<string>(parts.Skip(1));
+            }
+            if (parts.Count == 1)
             {
                 return GetEventAsync(parts[0], cancellationToken);
             }
-            if (parts.Length == 2)
+            if (parts.Count == 2)
             {
                 return GetExtensionAsync(parts[0], parts[1], cancellationToken);
             }
