@@ -4,6 +4,7 @@ using eventphone.guru3.carddav.DAV;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
@@ -46,6 +47,10 @@ namespace eventphone.guru3.carddav
             }
             var factory = app.ApplicationServices.GetService<ILoggerFactory>();
             LoggerFactory.Factory = factory;
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.All
+            });
             app.Run(async (context) =>
             {
                 // Create the proper HTTP context
