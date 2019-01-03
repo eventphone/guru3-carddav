@@ -19,8 +19,8 @@ namespace eventphone.guru3.carddav.DAV
         private readonly Guru3Context _context;
         private static readonly XElement s_xDavCollection = new XElement(WebDavNamespaces.DavNs + "collection");
 
-        public Guru3RootCollection(Guru3Context context)
-            :base("eventphone")
+        public Guru3RootCollection(string root, Guru3Context context)
+            :base(root, "eventphone")
         {
             _context = context;
         }
@@ -36,7 +36,7 @@ namespace eventphone.guru3.carddav.DAV
             var result = new List<IStoreItem>();
             foreach (var addressbook in events)
             {
-                result.Add(new Guru3Collection(addressbook.Id, addressbook.Name, addressbook.LastChanged.GetValueOrDefault(), _context));
+                result.Add(new Guru3Collection(Root, addressbook.Id, addressbook.Name, addressbook.LastChanged.GetValueOrDefault(), _context));
             }
             return result;
         }

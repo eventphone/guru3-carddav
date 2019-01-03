@@ -26,6 +26,13 @@ namespace eventphone.guru3.carddav.DAV
         public override XName Name => PropertyName;
     }
 
+    public class AddressbookHomeSetColon<TEntry> : DavXElement<TEntry> where TEntry : IStoreItem
+    {
+        public static readonly XName PropertyName = CardDavNamespace.CardDavNsColon + "addressbook-home-set";
+
+        public override XName Name => PropertyName;
+    }
+
     public class GetCTag<TEntry> : DavString<TEntry> where TEntry : IStoreCollection
     {
         public static readonly XName PropertyName = CardDavNamespace.CalenderserverNs + "getctag";

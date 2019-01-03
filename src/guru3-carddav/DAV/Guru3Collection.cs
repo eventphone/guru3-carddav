@@ -18,21 +18,22 @@ namespace eventphone.guru3.carddav.DAV
     public class Guru3Collection : IStoreCollection
     {
         private readonly Guru3Context _context;
+        protected readonly string Root;
         private readonly string _name;
         private readonly int _id;
         private static readonly XElement _addressbook = new XElement(CardDavNamespace.CardDavNs + "addressbook");
         private static readonly XElement s_xDavCollection = new XElement(WebDavNamespaces.DavNs + "collection");
-        private static readonly XElement s_xDavCurrentUserPrincipal = new XElement(WebDavNamespaces.DavNs + "href", "/");
         private static readonly XElement _privileges = new XElement(WebDavNamespaces.DavNs + "privilege", new XElement(WebDavNamespaces.DavNs + "read"));
         private readonly string _etag;
 
-        public Guru3Collection(string name)
+        public Guru3Collection(string root, string name)
         {
+            Root = root;
             _name = name;
         }
 
-        public Guru3Collection(int id, string name, DateTimeOffset lastChanged, Guru3Context context)
-            :this(name)
+        public Guru3Collection(string root, int id, string name, DateTimeOffset lastChanged, Guru3Context context)
+            :this(root, name)
         {
             _context = context;
             _id = id;
@@ -69,11 +70,15 @@ namespace eventphone.guru3.carddav.DAV
                 },
                 new CurrentUserPrincipal<Guru3Collection>
                 {
-                    Getter = (context, collection) => s_xDavCurrentUserPrincipal
+                    Getter = (context, collection) => new XElement(WebDavNamespaces.DavNs + "href", collection.Root)
                 },
                 new AddressbookHomeSet<Guru3Collection>
                 {
-                    Getter = (context, collection) => s_xDavCurrentUserPrincipal
+                    Getter = (context, collection) => new XElement(WebDavNamespaces.DavNs + "href", collection.Root)
+                },
+                new AddressbookHomeSetColon<Guru3Collection>
+                {
+                    Getter = (context, collection) => new XElement(WebDavNamespaces.DavNs + "href", collection.Root)
                 },
                 new DavDisplayName<Guru3Collection>
                 {

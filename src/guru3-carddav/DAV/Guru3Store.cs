@@ -23,18 +23,20 @@ namespace eventphone.guru3.carddav.DAV
         {
             var path = uri.LocalPath;
             IList<string> parts = path.Split(new []{'/'}, StringSplitOptions.RemoveEmptyEntries);
+            var root = "/";
             if (parts.Count > 0 && "dav".Equals(parts[0], StringComparison.OrdinalIgnoreCase))
             {
                 //remove proxy prefix
                 parts = new List<string>(parts.Skip(1));
+                root = "/dav";
             }
             if (parts.Count == 0)
             {
-                return Task.FromResult(GetRoot());
+                return Task.FromResult(GetRoot(root));
             }
             if (parts.Count == 1)
             {
-                return GetEventAsync(parts[0], cancellationToken);
+                return GetEventAsync(root, parts[0], cancellationToken);
             }
             if (parts.Count == 2)
             {
@@ -43,12 +45,12 @@ namespace eventphone.guru3.carddav.DAV
             throw new NotImplementedException();
         }
 
-        private IStoreItem GetRoot()
+        private IStoreItem GetRoot(string root)
         {
-            return new Guru3RootCollection(_context);
+            return new Guru3RootCollection(root, _context);
         }
 
-        private async Task<IStoreItem> GetEventAsync(string eventName, CancellationToken cancellationToken)
+        private async Task<IStoreItem> GetEventAsync(string root, string eventName, CancellationToken cancellationToken)
         {
             var dbEvent = await _context.Events.AsNoTracking()
                 .Active()
@@ -57,7 +59,7 @@ namespace eventphone.guru3.carddav.DAV
                 .FirstOrDefaultAsync(cancellationToken);
             if (dbEvent == null)
                 return null;
-            return new Guru3Collection(dbEvent.Id, dbEvent.Name, dbEvent.LastChanged.GetValueOrDefault(), _context);
+            return new Guru3Collection(root, dbEvent.Id, dbEvent.Name, dbEvent.LastChanged.GetValueOrDefault(), _context);
         }
 
         private async Task<IStoreItem> GetExtensionAsync(string eventName, string number, CancellationToken cancellationToken)
