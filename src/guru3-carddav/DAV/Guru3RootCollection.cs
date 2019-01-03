@@ -61,7 +61,6 @@ namespace eventphone.guru3.carddav.DAV
     {
         private readonly IPropertyManager _inner;
         private readonly DavGetContentType<Guru3Collection> _contentType;
-        private readonly List<PropertyInfo> _properties;
 
         public RootPropertyManager(IPropertyManager inner)
         {
