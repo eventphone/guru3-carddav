@@ -43,7 +43,7 @@ namespace eventphone.guru3.carddav.DAV
 
         public string UniqueKey => $"ev:{_id}";
 
-        public Task<Stream> GetReadableStreamAsync(IHttpContext httpContext, CancellationToken cancellationToken)
+        public virtual Task<Stream> GetReadableStreamAsync(IHttpContext httpContext, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
@@ -110,7 +110,7 @@ namespace eventphone.guru3.carddav.DAV
             return date.ToUnixTimeMilliseconds().ToString();
         }
 
-        public IPropertyManager PropertyManager => DefaultPropertyManager;
+        public virtual IPropertyManager PropertyManager => DefaultPropertyManager;
 
         public ILockingManager LockingManager 
         {
