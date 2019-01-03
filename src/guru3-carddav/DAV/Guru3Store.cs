@@ -23,14 +23,14 @@ namespace eventphone.guru3.carddav.DAV
         {
             var path = uri.LocalPath;
             IList<string> parts = path.Split(new []{'/'}, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Count == 0)
-            {
-                return Task.FromResult(GetRoot());
-            }
-            if ("dav".Equals(parts[0], StringComparison.OrdinalIgnoreCase))
+            if (parts.Count > 0 && "dav".Equals(parts[0], StringComparison.OrdinalIgnoreCase))
             {
                 //remove proxy prefix
                 parts = new List<string>(parts.Skip(1));
+            }
+            if (parts.Count == 0)
+            {
+                return Task.FromResult(GetRoot());
             }
             if (parts.Count == 1)
             {
