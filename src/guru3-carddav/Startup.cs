@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NWebDav.Server;
 using NWebDav.Server.AspNetCore;
+using NWebDav.Server.Logging;
 using NWebDav.Server.Stores;
 
 namespace eventphone.guru3.carddav
@@ -33,6 +34,7 @@ namespace eventphone.guru3.carddav
             services.AddSingleton<IRequestHandlerFactory, CarddavRequestHandlerFactory>();
             services.AddScoped<IStore, Guru3Store>();
             services.AddScoped<IWebDavDispatcher, WebDavDispatcher>();
+            services.AddSingleton<ILoggerFactory, DAVLoggerFactory>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -42,12 +44,13 @@ namespace eventphone.guru3.carddav
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            var factory = app.ApplicationServices.GetService<ILoggerFactory>();
+            LoggerFactory.Factory = factory;
             app.Run(async (context) =>
             {
                 // Create the proper HTTP context
                 var httpContext = new AspNetCoreContext(context);
-
+                
                 var webDavDispatcher = context.RequestServices.GetRequiredService<IWebDavDispatcher>();
 
                 // Dispatch request
