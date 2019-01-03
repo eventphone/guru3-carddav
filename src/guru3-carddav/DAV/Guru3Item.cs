@@ -18,12 +18,14 @@ namespace eventphone.guru3.carddav.DAV
     {
         private readonly int _id;
         private readonly string _number;
+        private readonly string _etag;
         private readonly Guru3Context _context;
 
-        public Guru3Item(int id, string number, Guru3Context context)
+        public Guru3Item(int id, string number, DateTimeOffset lastChanged, Guru3Context context)
         {
             _id = id;
             _number = number;
+            _etag = lastChanged.ToUnixTimeMilliseconds().ToString();
             _context = context;
         }
 
@@ -80,7 +82,7 @@ namespace eventphone.guru3.carddav.DAV
                 },
                 new DavGetEtag<Guru3Item>
                 {
-                    GetterAsync = (context, item, cancellationToken) => item.GetEtagAsync()
+                    Getter = (context, item) => item._etag
                 }, 
                 new DavGetContentType<Guru3Item>
                 {
@@ -92,11 +94,5 @@ namespace eventphone.guru3.carddav.DAV
                     GetterAsync = (context, item, cancellationToken) => item.GetVCardAsync(cancellationToken)
                 }, 
             });
-
-        private async Task<string> GetEtagAsync()
-        {
-            var changed = await _context.Extensions.Where(x => x.Id == _id).Select(x => x.LastChanged).FirstOrDefaultAsync();
-            return changed.ToUnixTimeMilliseconds().ToString();
-        }
     }
 }

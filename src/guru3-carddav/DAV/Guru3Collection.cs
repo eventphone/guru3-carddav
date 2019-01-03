@@ -24,17 +24,19 @@ namespace eventphone.guru3.carddav.DAV
         private static readonly XElement s_xDavCollection = new XElement(WebDavNamespaces.DavNs + "collection");
         private static readonly XElement s_xDavCurrentUserPrincipal = new XElement(WebDavNamespaces.DavNs + "href", "/");
         private static readonly XElement _privileges = new XElement(WebDavNamespaces.DavNs + "privilege", new XElement(WebDavNamespaces.DavNs + "read"));
+        private readonly string _etag;
 
         public Guru3Collection(string name)
         {
             _name = name;
         }
 
-        public Guru3Collection(int id, string name, Guru3Context context)
+        public Guru3Collection(int id, string name, DateTimeOffset lastChanged, Guru3Context context)
             :this(name)
         {
             _context = context;
             _id = id;
+            _etag = lastChanged.ToUnixTimeMilliseconds().ToString();
         }
 
         protected virtual XElement[] RessourceType => new []{s_xDavCollection, _addressbook};
@@ -79,8 +81,12 @@ namespace eventphone.guru3.carddav.DAV
                 },
                 new GetCTag<Guru3Collection>
                 {
-                    GetterAsync = (context, collection, cancellationToken) => collection.GetCTagAsync(cancellationToken)
+                    Getter = (context, collection) => collection._etag
                 },
+                new DavGetEtag<Guru3Collection>
+                {
+                    Getter = (context, collection) => collection._etag
+                }, 
                 new DavCurrentUserPrivilegeSet<Guru3Collection>
                 {
                     Getter = (context, collection) => _privileges
@@ -103,13 +109,6 @@ namespace eventphone.guru3.carddav.DAV
             return _context.Events.Where(x => x.Id == _id).Select(x => x.Name).FirstOrDefaultAsync(cancellationToken);
         }
 
-        private async Task<string> GetCTagAsync(CancellationToken cancellationToken)
-        {
-            var date = await _context.Extensions.Where(x => x.EventId == _id)
-                .MaxAsync(x => x.LastChanged, cancellationToken);
-            return date.ToUnixTimeMilliseconds().ToString();
-        }
-
         public virtual IPropertyManager PropertyManager => DefaultPropertyManager;
 
         public ILockingManager LockingManager 
@@ -127,12 +126,12 @@ namespace eventphone.guru3.carddav.DAV
             var extensions = await _context.Extensions.AsNoTracking()
                 .Where(x => x.EventId == _id)
                 .Active()
-                .Select(x => new {x.Id, x.Number})
+                .Select(x => new {x.Id, x.Number, x.LastChanged})
                 .ToListAsync(cancellationToken);
             var result = new List<IStoreItem>();
             foreach (var extension in extensions)
             {
-                result.Add(new Guru3Item(extension.Id, extension.Number, _context));
+                result.Add(new Guru3Item(extension.Id, extension.Number, extension.LastChanged, _context));
             }
             return result;
         }

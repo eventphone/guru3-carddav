@@ -47,11 +47,11 @@ namespace eventphone.guru3.carddav.DAV
             var dbEvent = await _context.Events.AsNoTracking()
                 .Active()
                 .Where(x => x.Name == eventName)
-                .Select(x=>new {x.Id, x.Name})
+                .Select(x=>new {x.Id, x.Name, LastChanged = x.Extensions.Max(y=>(DateTimeOffset?)y.LastChanged)})
                 .FirstOrDefaultAsync(cancellationToken);
             if (dbEvent == null)
                 return null;
-            return new Guru3Collection(dbEvent.Id, dbEvent.Name, _context);
+            return new Guru3Collection(dbEvent.Id, dbEvent.Name, dbEvent.LastChanged.GetValueOrDefault(), _context);
         }
 
         private async Task<IStoreItem> GetExtensionAsync(string eventName, string number, CancellationToken cancellationToken)
@@ -60,11 +60,11 @@ namespace eventphone.guru3.carddav.DAV
                 .Active()
                 .Where(x => x.Event.Name == eventName)
                 .Where(x => x.Number == number)
-                .Select(x => new {x.Id, x.Number})
+                .Select(x => new {x.Id, x.Number, x.LastChanged})
                 .FirstOrDefaultAsync(cancellationToken);
             if (dbExtension == null)
                 return null;
-            return new Guru3Item(dbExtension.Id, dbExtension.Number, _context);
+            return new Guru3Item(dbExtension.Id, dbExtension.Number, dbExtension.LastChanged, _context);
         }
 
         public Task<IStoreCollection> GetCollectionAsync(Uri uri, IHttpContext httpContext, CancellationToken cancellationToken)

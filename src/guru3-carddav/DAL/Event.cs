@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -26,5 +27,7 @@ namespace eventphone.guru3.carddav.DAL
 
         [Column("descriptionDE")]
         public string DescriptionDe { get; set; }
+
+        public ICollection<Extension> Extensions { get; set; }
     }
 }

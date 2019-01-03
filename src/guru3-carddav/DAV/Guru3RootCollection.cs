@@ -31,12 +31,12 @@ namespace eventphone.guru3.carddav.DAV
         {
             var events = await _context.Events.AsNoTracking()
                 .Active()
-                .Select(x => new {x.Id, x.Name})
+                .Select(x => new {x.Id, x.Name, LastChanged = x.Extensions.Max(y=>(DateTimeOffset?)y.LastChanged)})
                 .ToListAsync(cancellationToken);
             var result = new List<IStoreItem>();
             foreach (var addressbook in events)
             {
-                result.Add(new Guru3Collection(addressbook.Id, addressbook.Name, _context));
+                result.Add(new Guru3Collection(addressbook.Id, addressbook.Name, addressbook.LastChanged.GetValueOrDefault(), _context));
             }
             return result;
         }
