@@ -28,6 +28,9 @@ namespace eventphone.guru3.carddav.DAL
         [Column("descriptionDE")]
         public string DescriptionDe { get; set; }
 
+        [Column("isPermanentAndPublic")]
+        public bool IsPermanentAndPublic { get; set; }
+
         public ICollection<Extension> Extensions { get; set; }
     }
 }
