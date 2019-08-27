@@ -11,7 +11,7 @@ namespace eventphone.guru3.carddav.DAL
             return source.Where(x => x.RegistrationStart != null || x.IsPermanentAndPublic)
                 .Where(x => x.RegistrationStart <= now || x.IsPermanentAndPublic)
                 .Where(x => x.End != null || x.IsPermanentAndPublic)
-                .Where(x => x.End > now || x.IsPermanentAndPublic);
+                .Where(x => x.End >= now || x.IsPermanentAndPublic);
         }
 
         public static IQueryable<Extension> Active(this IQueryable<Extension> source)
@@ -20,7 +20,7 @@ namespace eventphone.guru3.carddav.DAL
             return source.Where(x => x.Event.RegistrationStart != null || x.Event.IsPermanentAndPublic)
                 .Where(x => x.Event.RegistrationStart <= now || x.Event.IsPermanentAndPublic)
                 .Where(x => x.Event.End != null || x.Event.IsPermanentAndPublic)
-                .Where(x => x.Event.End > now || x.Event.IsPermanentAndPublic)
+                .Where(x => x.Event.End >= now || x.Event.IsPermanentAndPublic)
                 .Where(x=>x.InPhonebook);
         }
     }
