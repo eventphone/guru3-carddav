@@ -49,10 +49,10 @@ namespace eventphone.guru3.carddav.DAV
             if (extension == null) return String.Empty;
             return "BEGIN:VCARD\n" +
                         "VERSION:4.0\n" +
-                        $"N:{extension.Name}\n" +
+                        $"N:{extension.Name.Escape()}\n" +
                         $"TEL:{_number}\n" +
                         $"LANG:{extension.Language}\n" +
-                        $"ADR:{extension.Location}\n" +
+                        $"ADR:{extension.Location.Escape()}\n" +
                         "END:VCARD";
         }
 

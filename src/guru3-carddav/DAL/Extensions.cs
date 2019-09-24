@@ -23,5 +23,12 @@ namespace eventphone.guru3.carddav.DAL
                 .Where(x => x.Event.End >= now || x.Event.IsPermanentAndPublic)
                 .Where(x=>x.InPhonebook);
         }
+
+        public static string Escape(this string value)
+        {
+            return value.Replace(@"\", @"\\")
+                .Replace(";", @"\;")
+                .Replace(",", @"\,");
+        }
     }
 }
