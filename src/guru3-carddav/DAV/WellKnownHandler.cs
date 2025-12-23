@@ -1,27 +1,34 @@
 ﻿using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using NWebDav.Server;
-using NWebDav.Server.Http;
+using NWebDav.Server.Handlers;
 using NWebDav.Server.Stores;
 
 namespace eventphone.guru3.carddav.DAV
 {
     public class WellKnownHandler : IRequestHandler
     {
-        private readonly string _root;
+        private readonly IStore _store;
+        private readonly PropFindHandler _inner;
 
-        public WellKnownHandler(string root)
+        public WellKnownHandler(IStore store, PropFindHandler inner)
         {
-            _root = root;
+            _store = store;
+            _inner = inner;
         }
 
-        public Task<bool> HandleRequestAsync(IHttpContext httpContext, IStore store, CancellationToken cancellationToken)
+        public Task<bool> HandleRequestAsync(HttpContext httpContext)
         {
-            var response = httpContext.Response;
-            response.Status = (int) HttpStatusCode.TemporaryRedirect;
-            response.SetHeaderValue(nameof(HttpResponseHeader.Location), _root);
-            return Task.FromResult(true);
+            if (httpContext.Request.Path == "/.well-known/carddav")
+            {
+                var response = httpContext.Response;
+                response.StatusCode = (int)HttpStatusCode.TemporaryRedirect;
+                response.Headers.Append(nameof(HttpResponseHeader.Location), "/");
+                return Task.FromResult(true);
+            }
+            return _inner.HandleRequestAsync(httpContext);
         }
     }
 }
