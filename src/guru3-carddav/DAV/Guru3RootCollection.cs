@@ -8,7 +8,6 @@ using System.Xml.Linq;
 using eventphone.guru3.carddav.DAL;
 using Microsoft.EntityFrameworkCore;
 using NWebDav.Server;
-using NWebDav.Server.Http;
 using NWebDav.Server.Props;
 using NWebDav.Server.Stores;
 
@@ -27,18 +26,13 @@ namespace eventphone.guru3.carddav.DAV
 
         protected override XElement[] RessourceType => new []{s_xDavCollection};
 
-        public override async Task<IList<IStoreItem>> GetItemsAsync(IHttpContext httpContext, CancellationToken cancellationToken)
+        public override IAsyncEnumerable<IStoreItem> GetItemsAsync(CancellationToken cancellationToken)
         {
-            var events = await _context.Events.AsNoTracking()
+            return _context.Events.AsNoTracking()
                 .Active()
-                .Select(x => new {x.Id, x.Name, LastChanged = x.Extensions.Max(y=>(DateTimeOffset?)y.LastChanged)})
-                .ToListAsync(cancellationToken);
-            var result = new List<IStoreItem>();
-            foreach (var addressbook in events)
-            {
-                result.Add(new Guru3Collection(Root, addressbook.Id, addressbook.Name, addressbook.LastChanged.GetValueOrDefault(), _context));
-            }
-            return result;
+                .Select(x => new { x.Id, x.Name, LastChanged = x.Extensions.Max(y => (DateTimeOffset?)y.LastChanged) })
+                .AsAsyncEnumerable()
+                .Select(x => new Guru3Collection(Root, x.Id, x.Name, x.LastChanged.GetValueOrDefault(), _context));
         }
 
         protected override Task<string> GetDescriptionAsync(CancellationToken cancellationToken)
@@ -46,7 +40,7 @@ namespace eventphone.guru3.carddav.DAV
             return Task.FromResult(String.Empty);
         }
 
-        public override Task<Stream> GetReadableStreamAsync(IHttpContext httpContext, CancellationToken cancellationToken)
+        public override Task<Stream> GetReadableStreamAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult<Stream>(File.OpenRead("wwwroot/index.html"));
         }
@@ -65,22 +59,22 @@ namespace eventphone.guru3.carddav.DAV
         public RootPropertyManager(IPropertyManager inner)
         {
             _inner = inner;
-            _contentType = new DavGetContentType<Guru3Collection> {Getter = (context, collection) => "text/html"};
+            _contentType = new DavGetContentType<Guru3Collection> {Getter = (collection) => "text/html"};
             Properties = new List<PropertyInfo>(_inner.Properties) {new PropertyInfo(_contentType.Name, false)};
         }
 
         public IList<PropertyInfo> Properties { get; }
 
-        public Task<object> GetPropertyAsync(IHttpContext httpContext, IStoreItem item, XName propertyName, bool skipExpensive, CancellationToken cancellationToken)
+        public Task<object> GetPropertyAsync(IStoreItem item, XName propertyName, bool skipExpensive, CancellationToken cancellationToken)
         {
             if (propertyName == _contentType.Name)
-                return Task.FromResult<object>(_contentType.Getter(httpContext, (Guru3Collection) item));
-            return _inner.GetPropertyAsync(httpContext, item, propertyName, skipExpensive, cancellationToken);
+                return Task.FromResult<object>(_contentType.Getter((Guru3Collection) item));
+            return _inner.GetPropertyAsync(item, propertyName, skipExpensive, cancellationToken);
         }
 
-        public Task<DavStatusCode> SetPropertyAsync(IHttpContext httpContext, IStoreItem item, XName propertyName, object value, CancellationToken cancellationToken)
+        public Task<DavStatusCode> SetPropertyAsync(IStoreItem item, XName propertyName, object value, CancellationToken cancellationToken)
         {
-            return _inner.SetPropertyAsync(httpContext, item, propertyName, value, cancellationToken);
+            return _inner.SetPropertyAsync(item, propertyName, value, cancellationToken);
         }
     }
 }

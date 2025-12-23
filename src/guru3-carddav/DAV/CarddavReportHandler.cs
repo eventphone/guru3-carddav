@@ -4,10 +4,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using NWebDav.Server;
+using NWebDav.Server.Handlers;
 using NWebDav.Server.Helpers;
-using NWebDav.Server.Http;
-using NWebDav.Server.Logging;
 using NWebDav.Server.Props;
 using NWebDav.Server.Stores;
 
@@ -15,6 +16,16 @@ namespace eventphone.guru3.carddav.DAV
 {
     public class CarddavReportHandler : IRequestHandler
     {
+        private readonly ILogger s_log;
+        private readonly IStore _store;
+        private readonly IXmlReaderWriter _xmlReaderWriter;
+
+        public CarddavReportHandler(IStore store, IXmlReaderWriter xmlReaderWriter, ILoggerFactory loggerFactory)
+        {
+            _store = store;
+            _xmlReaderWriter = xmlReaderWriter;
+            s_log = loggerFactory.CreateLogger<CarddavReportHandler>();
+        }
         private struct PropertyEntry
         {
             public Uri Uri { get; }
@@ -35,22 +46,21 @@ namespace eventphone.guru3.carddav.DAV
             AllProperties = 2,
             SelectedProperties = 4
         }
-        
-        private static readonly ILogger s_log = LoggerFactory.CreateLogger(typeof(CarddavReportHandler));
 
-        public Task<bool> HandleRequestAsync(IHttpContext httpContext, IStore store, CancellationToken cancellationToken)
+        public async Task<bool> HandleRequestAsync(HttpContext httpContext)
         {
             // Obtain request and response
             var request = httpContext.Request;
+            var cancellationToken = httpContext.RequestAborted;
             
-            var xDocument = request.LoadXmlDocument();
+            var xDocument = await _xmlReaderWriter.LoadXmlDocumentAsync(request, cancellationToken);
             if (xDocument?.Root == null)
                 throw new NotImplementedException();
 
             if (xDocument.Root.Name == CardDavNamespace.CardDavNs + "addressbook-query")
-                return AddressbookQueryAsync(cancellationToken);
+                return await AddressbookQueryAsync(cancellationToken);
             if (xDocument.Root.Name == CardDavNamespace.CardDavNs + "addressbook-multiget")
-                return AddressbookMultigetAsync(store, httpContext, xDocument.Root, cancellationToken);
+                return await AddressbookMultigetAsync(_store, httpContext, xDocument.Root, cancellationToken);
 
             throw new NotImplementedException();
         }
@@ -60,13 +70,13 @@ namespace eventphone.guru3.carddav.DAV
             throw new NotImplementedException();
         }
 
-        private async Task<bool> AddressbookMultigetAsync(IStore store, IHttpContext httpContext, XElement report, CancellationToken cancellationToken)
+        private async Task<bool> AddressbookMultigetAsync(IStore store, HttpContext httpContext, XElement report, CancellationToken cancellationToken)
         {
             // Obtain entry
             var request = httpContext.Request;
             var response = httpContext.Response;
 
-            var topEntry = await store.GetItemAsync(request.Url, httpContext, cancellationToken).ConfigureAwait(false);
+            var topEntry = await store.GetItemAsync(request.GetUri(), cancellationToken).ConfigureAwait(false);
             if (topEntry == null)
             {
                 response.SetStatus(DavStatusCode.NotFound);
@@ -103,19 +113,19 @@ namespace eventphone.guru3.carddav.DAV
             {
                 foreach (var href in report.Elements(WebDavNamespaces.DavNs + "href"))
                 {
-                    var uri = new Uri(request.Url, href.Value);
-                    if (!request.Url.IsBaseOf(uri))
+                    var uri = new Uri(request.GetUri(), href.Value);
+                    if (!request.GetUri().IsBaseOf(uri))
                     {
                         //need to be members (not necessarily internal members) of the resource identified by the Request-URI
                         continue;
                     }
-                    var item = await store.GetItemAsync(uri, httpContext, cancellationToken).ConfigureAwait(false);
+                    var item = await store.GetItemAsync(uri, cancellationToken).ConfigureAwait(false);
                     entries.Add(new PropertyEntry(uri, item));
                 }
             }
             else
             {
-                entries.Add(new PropertyEntry(request.Url, topEntry));
+                entries.Add(new PropertyEntry(request.GetUri(), topEntry));
             }
             
             // Obtain the status document
@@ -187,13 +197,13 @@ namespace eventphone.guru3.carddav.DAV
             }
 
             // Stream the document
-            await response.SendResponseAsync(DavStatusCode.MultiStatus, xDocument, cancellationToken).ConfigureAwait(false);
+            await _xmlReaderWriter.SendResponseAsync(response, DavStatusCode.MultiStatus, xDocument).ConfigureAwait(false);
 
             // Finished writing
             return true;
         }
 
-        private async Task AddPropertyAsync(IHttpContext httpContext, XElement xResponse, XElement xPropStatValues, IPropertyManager propertyManager, IStoreItem item, XName propertyName, IList<XName> addedProperties, CancellationToken cancellationToken)
+        private async Task AddPropertyAsync(HttpContext httpContext, XElement xResponse, XElement xPropStatValues, IPropertyManager propertyManager, IStoreItem item, XName propertyName, IList<XName> addedProperties, CancellationToken cancellationToken)
         {
             if (!addedProperties.Contains(propertyName))
             {
@@ -203,7 +213,7 @@ namespace eventphone.guru3.carddav.DAV
                     // Check if the property is supported
                     if (propertyManager.Properties.Any(p => p.Name == propertyName))
                     {
-                        var value = await propertyManager.GetPropertyAsync(httpContext, item, propertyName, false, cancellationToken).ConfigureAwait(false);
+                        var value = await propertyManager.GetPropertyAsync(item, propertyName, false, cancellationToken).ConfigureAwait(false);
                         if (value is IEnumerable<XElement>)
                             value = ((IEnumerable<XElement>) value).Cast<object>().ToArray();
 
@@ -219,7 +229,7 @@ namespace eventphone.guru3.carddav.DAV
                     }
                     else
                     {
-                        s_log.Log(LogLevel.Warning, () => $"Property {propertyName} is not supported on item {item.Name}.");
+                        s_log.Log(LogLevel.Warning, $"Property {propertyName} is not supported on item {item.Name}.");
                         xResponse.Add(new XElement(WebDavNamespaces.DavNs + "propstat",
                             new XElement(WebDavNamespaces.DavNs + "prop", new XElement(propertyName, null)),
                             new XElement(WebDavNamespaces.DavNs + "status", "HTTP/1.1 404 Not Found"),
@@ -228,7 +238,7 @@ namespace eventphone.guru3.carddav.DAV
                 }
                 catch (Exception exc)
                 {
-                    s_log.Log(LogLevel.Error, () => $"Property {propertyName} on item {item.Name} raised an exception.", exc);
+                    s_log.Log(LogLevel.Error, $"Property {propertyName} on item {item.Name} raised an exception.", exc);
                     xResponse.Add(new XElement(WebDavNamespaces.DavNs + "propstat",
                         new XElement(WebDavNamespaces.DavNs + "prop", new XElement(propertyName, null)),
                         new XElement(WebDavNamespaces.DavNs + "status", "HTTP/1.1 500 Internal server error"),

@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using eventphone.guru3.carddav.DAL;
 using Microsoft.EntityFrameworkCore;
 using NWebDav.Server;
-using NWebDav.Server.Http;
 using NWebDav.Server.Locking;
 using NWebDav.Server.Props;
 using NWebDav.Server.Stores;
@@ -33,7 +32,7 @@ namespace eventphone.guru3.carddav.DAV
 
         public string UniqueKey => $"ex:{_id}";
 
-        public async Task<Stream> GetReadableStreamAsync(IHttpContext httpContext, CancellationToken cancellationToken)
+        public async Task<Stream> GetReadableStreamAsync(CancellationToken cancellationToken)
         {
             var vcard = await GetVCardAsync(cancellationToken);
             return new MemoryStream(Encoding.UTF8.GetBytes(vcard));
@@ -57,12 +56,12 @@ namespace eventphone.guru3.carddav.DAV
                         "END:VCARD";
         }
 
-        public Task<DavStatusCode> UploadFromStreamAsync(IHttpContext httpContext, Stream source, CancellationToken cancellationToken)
+        public Task<DavStatusCode> UploadFromStreamAsync(Stream source, CancellationToken cancellationToken)
         {
             return Task.FromResult(DavStatusCode.NotImplemented);
         }
 
-        public Task<StoreItemResult> CopyAsync(IStoreCollection destination, string name, bool overwrite, IHttpContext httpContext, CancellationToken cancellationToken)
+        public Task<StoreItemResult> CopyAsync(IStoreCollection destination, string name, bool overwrite, CancellationToken cancellationToken)
         {
             return Task.FromResult(new StoreItemResult(DavStatusCode.NotImplemented));
         }
@@ -79,20 +78,20 @@ namespace eventphone.guru3.carddav.DAV
             {
                 new DavGetResourceType<Guru3Item>
                 {
-                    Getter = (context, collection) => null
+                    Getter = (collection) => null
                 },
                 new DavGetEtag<Guru3Item>
                 {
-                    Getter = (context, item) => item._etag
+                    Getter = (item) => item._etag
                 }, 
                 new DavGetContentType<Guru3Item>
                 {
-                    Getter = (context, item) => "text/vcard"
+                    Getter = (item) => "text/vcard"
                 },
                 new AddressData<Guru3Item>
                 {
                     IsExpensive = true,
-                    GetterAsync = (context, item, cancellationToken) => item.GetVCardAsync(cancellationToken)
+                    GetterAsync = (item, cancellationToken) => item.GetVCardAsync(cancellationToken)
                 }, 
             });
     }

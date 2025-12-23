@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using eventphone.guru3.carddav.DAL;
 using Microsoft.EntityFrameworkCore;
-using NWebDav.Server.Http;
 using NWebDav.Server.Stores;
 
 namespace eventphone.guru3.carddav.DAV
@@ -19,7 +18,7 @@ namespace eventphone.guru3.carddav.DAV
             _context = context;
         }
 
-        public Task<IStoreItem> GetItemAsync(Uri uri, IHttpContext httpContext, CancellationToken cancellationToken)
+        public Task<IStoreItem> GetItemAsync(Uri uri, CancellationToken cancellationToken)
         {
             var path = uri.LocalPath;
             IList<string> parts = path.Split(new []{'/'}, StringSplitOptions.RemoveEmptyEntries);
@@ -75,7 +74,7 @@ namespace eventphone.guru3.carddav.DAV
             return new Guru3Item(dbExtension.Id, dbExtension.Number, dbExtension.LastChanged, _context);
         }
 
-        public Task<IStoreCollection> GetCollectionAsync(Uri uri, IHttpContext httpContext, CancellationToken cancellationToken)
+        public Task<IStoreCollection> GetCollectionAsync(Uri uri, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

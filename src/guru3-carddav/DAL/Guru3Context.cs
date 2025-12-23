@@ -23,8 +23,7 @@ namespace eventphone.guru3.carddav.DAL
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseMySql(_connectionString)
-                    .ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.QueryClientEvaluationWarning));
+                optionsBuilder.UseNpgsql(_connectionString);
             }
         }
 
